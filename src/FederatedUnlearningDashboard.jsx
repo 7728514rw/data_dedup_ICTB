@@ -511,6 +511,8 @@ const websitePages = {
                 <a href="deduplication.html">Deduplication</a>
                 <a href="installation.html">Installation</a>
 				<a href="user_stories.html">User Stories</a>
+        <a href="legal_ethics.html">Legal & Ethics</a>
+
             </div>
         </nav>
     </header>
@@ -564,6 +566,8 @@ const websitePages = {
                 <a href="deduplication.html">Deduplication</a>
                 <a href="installation.html">Installation</a>
 				<a href="user_stories.html">User Stories</a>
+        <a href="legal_ethics.html">Legal & Ethics</a>
+
             </div>
         </nav>
     </header>
@@ -625,6 +629,8 @@ const websitePages = {
                 <a href="deduplication.html">Deduplication</a>
                 <a href="installation.html">Installation</a>
 				<a href="user_stories.html">User Stories</a>
+        <a href="legal_ethics.html">Legal & Ethics</a>
+
             </div>
         </nav>
     </header>
@@ -858,6 +864,8 @@ python setup_fed_env.py</pre>
                 <a href="deduplication.html">Deduplication</a>
                 <a href="installation.html">Installation</a>
                 <a href="user_stories.html">User Stories</a>
+                <a href="legal_ethics.html">Legal & Ethics</a>
+
             </div>
         </nav>
     </header>
@@ -1111,7 +1119,68 @@ python setup_fed_env.py</pre>
         <p>&copy; Group 5 Project. All rights reserved.</p>
     </footer>
 
-    `
+    `,
+
+    // --- START: Legal & Ethics page ---
+"legal_ethics": `
+<header>
+  <nav>
+    <div class="logo">Dedupe Project</div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="deduplication.html">Deduplication</a>
+      <a href="installation.html">Installation</a>
+      <a href="user_stories.html">User Stories</a>
+      <a href="legal_ethics.html">Legal & Ethics</a>
+    </div>
+  </nav>
+</header>
+
+<div class="container">
+  <h1>Legal & Ethical Framework</h1>
+  <p>Data deduplication and machine unlearning reduce unnecessary data and support compliance
+  with privacy principles such as data minimisation, erasure, and accountability.</p>
+
+  <h2>Key Legal Concepts</h2>
+  <ul>
+    <li><strong>Data minimisation:</strong> Deduplication removes redundant copies of data.</li>
+    <li><strong>Right to erasure (GDPR Art. 17):</strong> Unlearning removes influence of deleted data.</li>
+    <li><strong>Privacy by design:</strong> Differential privacy and retention controls.</li>
+    <li><strong>Accountability:</strong> Audit logs for transparency.</li>
+  </ul>
+
+  <h2>Ethical Principles (FAST)</h2>
+  <ul>
+    <li><strong>Fairness</strong> – Reduces bias from duplicated samples.</li>
+    <li><strong>Accountability</strong> – Tracks unlearning and data usage.</li>
+    <li><strong>Safety</strong> – Adds privacy noise to protect identities.</li>
+    <li><strong>Transparency</strong> – Explains data controls clearly.</li>
+  </ul>
+
+  <h2>Risk → Control Mapping</h2>
+  <table class="params-table">
+    <thead><tr><th>Risk</th><th>Control in our dashboard</th></tr></thead>
+    <tbody>
+      <tr><td>Over-representation of a person/class</td><td>Deduplication + duplicate ratio per node.</td></tr>
+      <tr><td>Data lingering after deletion request</td><td>Unlearning mode with audit log.</td></tr>
+      <tr><td>Re-identification through outputs</td><td>Differential Privacy (configurable ε).</td></tr>
+      <tr><td>Excess retention</td><td>Retention window (days) set per run.</td></tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:0.9rem;opacity:.8">Educational content supporting GDPR & OAIC principles.</p>
+</div>
+
+<footer>
+  <p>&copy; 2025 Dedupe Project. All rights reserved.</p>
+</footer>
+`,
+
+// --- END: Legal & Ethics page ---
+
+
+    
+    
 };
 
 // Append shared CSS to every page dynamically
@@ -1418,14 +1487,21 @@ for (const page in websitePages) {
                 <section className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4"><div className="flex items-start gap-3"><AlertTriangle className="text-amber-400 flex-shrink-0 mt-0.5" size={20} /><div><h4 className="font-semibold text-amber-400 mb-2">Important Notice</h4><p className="text-slate-300 text-sm">Unlearning operations are irreversible...</p></div></div></section>
                 <section><h3 className="text-lg font-semibold text-emerald-400 mb-3">Contact & Compliance</h3><p className="text-slate-300 text-sm leading-relaxed">Contact our Data Protection Officer...</p></section>
               </div>
-              <div className="sticky bottom-0 bg-slate-800 border-t border-slate-700 p-6">
-                <button
-                  onClick={() => setShowGdprPolicy(false)}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 py-3 rounded-lg font-medium transition-all"
-                >
-                  Close
-                </button>
-              </div>
+              <div className="sticky bottom-0 bg-slate-800 border-t border-slate-700 p-6 flex gap-3">
+  <button
+    onClick={() => { setCurrentPage("legal_ethics"); setShowWebsite(true); }}
+    className="flex-1 bg-slate-900 hover:bg-slate-800 border border-emerald-500/50 text-emerald-400 py-3 rounded-lg font-medium transition-all"
+  >
+    Open Legal & Ethical Framework
+  </button>
+  <button
+    onClick={() => setShowGdprPolicy(false)}
+    className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 py-3 rounded-lg font-medium transition-all"
+  >
+    Close
+  </button>
+</div>
+
             </div>
           </div>
         )}
