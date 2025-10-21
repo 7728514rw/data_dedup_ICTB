@@ -549,7 +549,7 @@ const websitePages = {
 
     <!-- Footer section at the bottom of the page -->
     <footer>
-        <p>&copy; 2023 Dedupe Project. All rights reserved.</p>
+        <p>&copy; Group 5 Project. All rights reserved.</p>
     </footer>
     `,
 
@@ -611,7 +611,7 @@ const websitePages = {
 
     <!-- Footer with basic info -->
     <footer>
-        <p>&copy; 2023 Dedupe Project. All rights reserved.</p>
+        <p>&copy; Group 5 Project. All rights reserved.</p>
     </footer>
     `,
 
@@ -845,7 +845,7 @@ python setup_fed_env.py</pre>
 
     <!-- Footer -->
     <footer>
-        <p>&copy; 2023 Dedupe Project. All rights reserved.</p>
+        <p>&copy; Group 5 Project. All rights reserved.</p>
     </footer>
     `,
 
@@ -1108,7 +1108,7 @@ python setup_fed_env.py</pre>
     </div>
 
     <footer>
-        <p>&copy; 2023 Dedupe Project. All rights reserved.</p>
+        <p>&copy; Group 5 Project. All rights reserved.</p>
     </footer>
 
     `
