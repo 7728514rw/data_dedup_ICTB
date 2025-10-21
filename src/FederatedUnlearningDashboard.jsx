@@ -1128,27 +1128,27 @@ for (const page in websitePages) {
           </h2>
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Username</label>
+              <label className="block text-white font-medium text-white-300 mb-2">Username</label>
               <div className="relative">
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full bg-white-900 border border-white-700 rounded-lg p-3 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder="Enter username"
                   required
                 />
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white-400" size={18} />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
+              <label className="block text-white font-medium text-white-300 mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 pl-10 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full bg-white-900 border border-slate-700 rounded-lg p-3 pl-10 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder="Enter password"
                   required
                 />
