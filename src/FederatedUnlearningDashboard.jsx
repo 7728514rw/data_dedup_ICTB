@@ -628,7 +628,7 @@ const App = () => {
     </footer>
     `,
 
-    user_stories: `
+    "user_stories": `
     <header>
         <nav>
             <div class="logo">Dedupe Project</div>
@@ -638,23 +638,260 @@ const App = () => {
                 <a href="installation.html">Installation</a>
                 <a href="user_stories.html">User Stories</a>
                 <a href="legal_ethics.html">Legal & Ethics</a>
+
             </div>
         </nav>
     </header>
+
     <div class="container">
         <h1>Project User Stories</h1>
+        
+        <!-- Client User Stories Section -->
         <div class="content-section">
             <h2>Client User Stories</h2>
-            <!-- User stories omitted for brevity -->
+            <p>These user stories are a collated list of the steps provided by our client Dr. Viet Vo explaining how we should aim to progress to achieve successful completion of the project.</p>
+
+            <!-- User Story 01 -->
+            <div class="user-story">
+                <h3>User Story ID: 01</h3>
+                <h4>Title: Replicate and Evaluate Existing Deep Learning Architectures</h4>
+                <p><strong>User Story:</strong><br>
+                As a researcher in federated learning security, I want to begin by evaluating the implementation of existing works on various machine learning and deep learning architectures to provide a better understanding of possibilities for this project, as well as establishing a performance baseline for comparing adversarial impacts in later experiments.</p>
+                
+                <p><strong>Acceptance Criteria / Tasks:</strong></p>
+                <ul>
+                    <li>Implement LeNet and AlexNet based on methods described in the documentation provided.</li>
+                    <li>Train models under standard (non-adversarial) settings.</li>
+                    <li>Record baseline accuracy, loss, and convergence behavior.</li>
+                    <li>Document any variable results between replication results and original works.</li>
+                </ul>
+                
+                <div class="story-meta">
+                    <span class="priority high">Priority: High</span>
+                    <span class="story-points">Story Points: 3</span>
+                </div>
+            </div>
+
+            <!-- User Story 02 -->
+            <div class="user-story">
+                <h3>User Story ID: 02</h3>
+                <h4>Title: Analyse the Effects of Adversarial Configurations</h4>
+                <p><strong>User Story:</strong><br>
+                As a researcher in federated learning security, I want to explore the effects of different adversarial configurations (malicious clients, data volume, training duration), so that I can understand how varying attack parameters influence model robustness.</p>
+                
+                <p><strong>Acceptance Criteria / Tasks:</strong></p>
+                <ul>
+                    <li>Configure experiments with different numbers of malicious clients (e.g., 1, 5, 10).</li>
+                    <li>Vary the training data volume across clients.</li>
+                    <li>Test the impact of shorter vs. longer training durations.</li>
+                    <li>Record performance metrics (accuracy, robustness, convergence).</li>
+                    <li>Summarise trends and correlations between adversarial parameters and outcomes.</li>
+                </ul>
+                
+                <div class="story-meta">
+                    <span class="priority high">Priority: High</span>
+                    <span class="story-points">Story Points: 8</span>
+                </div>
+            </div>
+
+            <!-- User Story 03 -->
+            <div class="user-story">
+                <h3>User Story ID: 03</h3>
+                <h4>Title: Experiment with Non-IID Federated Data</h4>
+                <p><strong>User Story:</strong><br>
+                As a researcher in federated learning security, I want to adapt experiments to federated learning environments with non-IID data, so that I can evaluate model performance in realistic, heterogeneous deployment scenarios.</p>
+                
+                <p><strong>Acceptance Criteria / Tasks:</strong></p>
+                <ul>
+                    <li>Partition datasets into non-IID distributions across clients.</li>
+                    <li>Compare performance against IID settings.</li>
+                    <li>Measure impact on adversarial attack effectiveness under non-IID data.</li>
+                    <li>Document challenges and potential mitigation strategies.</li>
+                </ul>
+                
+                <div class="story-meta">
+                    <span class="priority high">Priority: High</span>
+                    <span class="story-points">Story Points: 8</span>
+                </div>
+            </div>
+
+            <!-- User Story 04 -->
+            <div class="user-story">
+                <h3>User Story ID: 04 (optional)</h3>
+                <h4>Title: Assess Defense Strategies Against Data Duplication Attacks</h4>
+                <p><strong>User Story:</strong><br>
+                As a researcher in federated learning security, I want to evaluate the effectiveness of existing robustness defenses (e.g., FLShield [4]) against data duplication attacks, so that I can determine how well current frameworks protect against adversarial strategies and identify gaps for improvement.</p>
+                
+                <p><strong>Acceptance Criteria / Tasks:</strong></p>
+                <ul>
+                    <li>Implement a data duplication attack within the federated learning environment.</li>
+                    <li>Integrate defense mechanisms such as FLShield [4] and other existing strategies.</li>
+                    <li>Measure defense effectiveness using accuracy, robustness, and attack success rates.</li>
+                    <li>Compare theoretical defense expectations with experimental results.</li>
+                    <li>Document strengths, weaknesses, and potential improvements for defense strategies.</li>
+                </ul>
+                
+                <div class="story-meta">
+                    <span class="priority medium">Priority: Medium (Optional but valuable)</span>
+                    <span class="story-points">Story Points: 8</span>
+                </div>
+            </div>
+
+            <!-- User Story 05 -->
+            <div class="user-story">
+                <h3>User Story ID: 05</h3>
+                <h4>Title: Develop Dashboard for Reporting Results</h4>
+                <p><strong>User Story:</strong><br>
+                As a researcher in federated learning security, I want to create a dashboard to visualise and report experimental results, so that I can easily compare models, parameters, and defense effectiveness, and communicate findings clearly.</p>
+                
+                <p><strong>Acceptance Criteria / Tasks:</strong></p>
+                <ul>
+                    <li>Design a dashboard interface to present key metrics (accuracy, loss, robustness, attack success rate).</li>
+                    <li>Include graphical visualisations (e.g., line charts, bar graphs, heatmaps).</li>
+                </ul>
+                
+                <div class="story-meta">
+                    <span class="priority medium">Priority: Medium</span>
+                    <span class="story-points">Story Points: 8</span>
+                </div>
+            </div>
         </div>
+
+        <!-- Additional User Stories Section -->
         <div class="content-section">
             <h2>Development User Stories</h2>
-            <!-- Development user stories omitted for brevity -->
+
+            <!-- Adversarial Parameters Analysis -->
+            <div class="user-story">
+                <h4>Title: Analyse Adversarial Parameters</h4>
+                <p><strong>User Story:</strong><br>
+                As a security analyst, I want to analyse adversarial parameters like the number of malicious clients, data volume, and training duration so that I can quantify the effort needed for successful duplication attacks and evaluate the effectiveness of our machine unlearning and deduplication solutions.</p>
+                
+                <div class="story-meta">
+                    <span class="priority high">Priority: High</span>
+                    <span class="story-points">Story Points: 5</span>
+                </div>
+                
+                <p><strong>Key Parameters:</strong></p>
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Description</th>
+                            <th>Why it Matters</th>
+                            <th>Metrics to Quantify Effort</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Number of Malicious Clients</td>
+                            <td>The scale of the attack, from a single malicious actor to a coordinated group.</td>
+                            <td>This helps us figure out if our security solution can handle a big, distributed attack.</td>
+                            <td>Duplication Rate: How much data gets copied based on the number of attackers.<br><br>Reconstruction Accuracy: How good the copies are, depending on how many people involved</td>
+                        </tr>
+                        <tr>
+                            <td>Data Volume</td>
+                            <td>The size and complexity of the dataset they're targeting.</td>
+                            <td>We need to see if our solution works just as well on a massive amount of data as it does on a small one.</td>
+                            <td>Cost per Duplication: The time and resources it takes to copy a single bit of data.<br><br>Efficiency: How fast they can pull off the attack as the dataset grows.</td>
+                        </tr>
+                        <tr>
+                            <td>Training Duration</td>
+                            <td>The time the attacker spends on the malicious process.</td>
+                            <td>This shows us if a long, patient attack is more successful than a quick, fast one.</td>
+                            <td>Success Rate Over Time: How much data they can get the longer they work at it.<br><br>Attack Persistence: How long the attacker can stay hidden before we catch them.</td>
+                        </tr>
+                        <tr>
+                            <td>Machine Unlearning/Deduplication Solution</td>
+                            <td>Our defense system to stop the bad guys from copying our data.</td>
+                            <td>The whole point of our work is to prove that our solution makes it much harder for them to succeed.</td>
+                            <td>Effort Multiplier: How many times more effort the attacker needs after we put our solution in place.<br><br>Risk Reduction: How much we reduce the chance of data getting stolen.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Build Deduplication Module -->
+            <div class="user-story">
+                <h4>Title: Build and Test Data Deduplication Module</h4>
+                <p><strong>User Story:</strong><br>
+                As a developer, I want to design and implement a deduplication module that integrates with the federated learning pipeline, so that duplicate data entries can be automatically detected and removed before training.</p>
+                
+                <p><strong>Acceptance Criteria / Tasks:</strong></p>
+                <ul>
+                    <li>Implement a deduplication function.</li>
+                    <li>Integrate the module into the data preprocessing pipeline.</li>
+                    <li>Test module accuracy.</li>
+                </ul>
+                
+                <div class="story-meta">
+                    <span class="priority high">Priority: High</span>
+                    <span class="story-points">Story Points: 5</span>
+                </div>
+            </div>
+
+            <!-- Machine Unlearning -->
+            <div class="user-story">
+                <h4>Title: Implement Machine Unlearning Functionality</h4>
+                <p><strong>User Story:</strong><br>
+                As a developer, I want to implement a machine unlearning feature that can remove the influence of specific client data from the global model, so that the system can comply with security and privacy requirements without full retraining.</p>
+                
+                <p><strong>Acceptance Criteria / Tasks:</strong></p>
+                <ul>
+                    <li>Implement incremental unlearning methods.</li>
+                    <li>Test accuracy and convergence of the model before and after unlearning.</li>
+                    <li>Compare runtime with full retraining for efficiency.</li>
+                </ul>
+                
+                <div class="story-meta">
+                    <span class="priority high">Priority: High</span>
+                    <span class="story-points">Story Points: 8</span>
+                </div>
+            </div>
+
+            <!-- Attack Simulation Framework -->
+            <div class="user-story">
+                <h4>Title: Develop Attack Simulation Framework</h4>
+                <p><strong>User Story:</strong><br>
+                As a developer, I want to create a reuseable framework to simulate duplication and adversarial attacks, so that researchers can run consistent, repeatable experiments under different configurations.</p>
+                
+                <p><strong>Acceptance Criteria / Tasks:</strong></p>
+                <ul>
+                    <li>Implement attack scripts with adjustable parameters.</li>
+                    <li>Ensure framework can log results.</li>
+                </ul>
+                
+                <div class="story-meta">
+                    <span class="priority medium">Priority: Medium</span>
+                    <span class="story-points">Story Points: 5</span>
+                </div>
+            </div>
+
+            <!-- Regulatory Compliance -->
+            <div class="user-story">
+                <h4>Title: Regulatory Compliance of Privacy Data</h4>
+                <p><strong>User Story:</strong><br>
+                As the model owner, I want to ensure that the model remains compliant with privacy regulations as outlined in the General Data Protection Regulation (GDPR). This is important because the model will run an unlearning algorithim of client data.</p>
+                
+                <p><strong>Acceptance Criteria / Tasks:</strong></p>
+                <ul>
+                    <li>Validate that the model before and after the unlearning request</li>
+                    <li>Monitor risks of adversarial misuse</li>
+                    <li>Refer to the GDPR for information on compliance</li>
+                </ul>
+                
+                <div class="story-meta">
+                    <span class="priority high">Priority: High</span>
+                    <span class="story-points">Story Points: 8</span>
+                </div>
+            </div>
         </div>
     </div>
+
     <footer>
         <p>&copy; Group 5 Project. All rights reserved.</p>
     </footer>
+
     `,
 
     legal_ethics: `
