@@ -1153,37 +1153,97 @@ const App = () => {
         )}
 
         {showAttackExplanation && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-6">
-            <div className="bg-slate-800 border border-slate-700 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-              <div className="sticky top-0 bg-slate-800 border-b border-slate-700 p-6 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Settings className="text-amber-400" size={24} />
-                  <h2 className="text-2xl font-bold">Attack Parameters Explained</h2>
-                </div>
-                <button onClick={() => setShowAttackExplanation(false)} className="text-slate-400 hover:text-white transition-colors">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div className="p-6 space-y-6">
-                <section><h3 className="text-lg font-semibold text-amber-400 mb-3">Attack Type</h3><p className="text-slate-300 text-sm leading-relaxed">Defines the type of attack...</p></section>
-                <section><h3 className="text-lg font-semibold text-amber-400 mb-3">Duplicate Ratio (%)</h3><p className="text-slate-300 text-sm leading-relaxed">Specifies the percentage of data...</p></section>
-                <section><h3 className="text-lg font-semibold text-amber-400 mb-3">Clients Affected (%)</h3><p className="text-slate-300 text-sm leading-relaxed">Indicates the percentage of clients...</p></section>
-                <section><h3 className="text-lg font-semibold text-amber-400 mb-3">Strategy</h3><p className="text-slate-300 text-sm leading-relaxed">Defines the distribution strategy...</p></section>
-                <section><h3 className="text-lg font-semibold text-amber-400 mb-3">Target Class</h3><p className="text-slate-300 text-sm leading-relaxed">Specifies the class to target...</p></section>
-              </div>
-              <div className="sticky bottom-0 bg-slate-800 border-t border-slate-700 p-6">
-                <button
-                  onClick={() => setShowAttackExplanation(false)}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 py-3 rounded-lg font-medium transition-all"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+    <div className="bg-slate-800 border border-slate-700 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+      <div className="sticky top-0 bg-slate-800 border-b border-slate-700 p-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Settings className="text-amber-400" size={24} />
+          <h2 className="text-2xl font-bold">Attack Parameters Explained</h2>
+        </div>
+        <button
+          onClick={() => setShowAttackExplanation(false)}
+          className="text-slate-400 hover:text-white transition-colors"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div className="p-6 space-y-6">
+        {/* ---- Attack Type ---- */}
+        <section>
+          <h3 className="text-lg font-semibold text-amber-400 mb-3">Attack Type</h3>
+          <p className="text-slate-300 text-sm leading-relaxed">
+            Determines the kind of adversarial manipulation applied to the federated training data.
+            <ul className="list-disc pl-5 mt-2">
+              <li>
+                <strong>Duplication</strong>: Replicates a subset of samples to artificially inflate their influence, causing the model to over-fit to those points.
+              </li>
+              <li>
+                <strong>Label Poison (future)</strong>: Flips or corrupts labels of selected samples, misleading the model into learning incorrect mappings.
+              </li>
+              <li>
+                <strong>Backdoor (future)</strong>: Inserts hidden triggers that, when present in inference inputs, force the model to produce attacker-chosen outputs.
+              </li>
+            </ul>
+            Selecting a type lets you test the system’s resilience against different threat models.
+          </p>
+        </section>
+
+        {/* ---- Duplicate Ratio ---- */}
+        <section>
+          <h3 className="text-lg font-semibold text-amber-400 mb-3">Duplicate Ratio (%)</h3>
+          <p className="text-slate-300 text-sm leading-relaxed">
+            The percentage of the original dataset that will be duplicated and re-inserted. A 10% ratio means 10% of the samples are copied, increasing their weight during training. Higher ratios amplify memorisation or bias but may also make the attack easier to detect due to unnatural data distribution. This setting is only active when <em>Attack Type</em> is “Duplication”.
+          </p>
+        </section>
+
+        {/* ---- Clients Affected ---- */}
+        <section>
+          <h3 className="text-lg font-semibold text-amber-400 mb-3">Clients Affected (%)</h3>
+          <p className="text-slate-300 text-sm leading-relaxed">
+            Specifies how many federated clients (nodes) will be compromised and will inject malicious data. For example, 30% means 30% of the nodes send poisoned updates. In federated averaging, a larger fraction of malicious clients can dominate the global model, even if honest clients are in the majority.
+          </p>
+        </section>
+
+        {/* ---- Strategy ---- */}
+        <section>
+          <h3 className="text-lg font-semibold text-amber-400 mb-3">Strategy</h3>
+          <p className="text-slate-300 text-sm leading-relaxed">
+            Controls the distribution of the attack across data or clients:
+            <ul className="list-disc pl-5 mt-2">
+              <li>
+                <strong>Random</strong>: Duplicates/poisoned samples are chosen uniformly at random.
+              </li>
+              <li>
+                <strong>Class-skewed</strong>: Focuses the attack on a specific class (see Target Class), creating bias toward that class.
+              </li>
+              <li>
+                <strong>Client-skewed</strong>: Concentrates malicious updates on a subset of clients, exploiting the aggregation step.
+              </li>
+            </ul>
+          </p>
+        </section>
+
+        {/* ---- Target Class ---- */}
+        <section>
+          <h3 className="text-lg font-semibold text-amber-400 mb-3">Target Class</h3>
+          <p className="text-slate-300 text-sm leading-relaxed">
+            When using a class-skewed strategy, this selects the class to target. “Auto” lets the system pick the class automatically (often the least-represented one for maximum impact). For CIFAR-10 you can choose “airplane”, “car”, etc.; for MNIST the classes map to digits 0-9. Targeting a class can create focused biases or backdoors.
+          </p>
+        </section>
+      </div>
+      <div className="sticky bottom-0 bg-slate-800 border-t border-slate-700 p-6">
+        <button
+          onClick={() => setShowAttackExplanation(false)}
+          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 py-3 rounded-lg font-medium transition-all"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
         {showWebsite && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-6">
