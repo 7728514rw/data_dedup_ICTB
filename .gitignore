@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.env
+.venv/
+backend/.venv/
+backend/__pycache__/
+backend/results/          # deduped CSV outputs
+*.log
+
+# Node/React
+node_modules/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
