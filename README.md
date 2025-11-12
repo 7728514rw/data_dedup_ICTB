@@ -72,6 +72,9 @@ The backend ships with generators under `backend/dedupe.py` that create CSVs in 
 - `Phishing-URLs` – fake brand/phishing links with duplicates & fuzzy perturbations
 - `Windows-EventLog` – synthetic log lines with host/user combos
 - `NSL-KDD sample` – simplified flow records with attack labels
+- `Firewall-Alerts` – IDS/firewall signatures (SQLi, C2, port scan, etc.)
+- `AWS-CloudTrail` – management events (CreateUser, DeleteAccessKey, etc.)
+- `Darkweb-Credentials` – compromised credential dumps with hashes + breach metadata
 
 Selecting a dataset (via dropdown or `/api/datasets/select`) loads the corresponding CSV into memory and updates KPIs.
 

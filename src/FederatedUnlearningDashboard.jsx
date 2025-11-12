@@ -11,6 +11,9 @@ const DATASET_CLASSES = {
   "NSL-KDD": ["benign", "DoS", "Probe", "R2L", "U2R"],
   "Phishing-URLs": ["legit", "phishing"],
   "Windows-EventLog": ["auth", "process", "network", "registry", "file"],
+  "Firewall-Alerts": ["low", "medium", "high", "critical"],
+  "AWS-CloudTrail": ["CreateUser", "DeleteAccessKey", "StopInstances", "CreateBucket"],
+  "Darkweb-Credentials": ["stolen", "verified"],
 };
 
 const PRESETS = [
@@ -384,6 +387,13 @@ const App = () => {
     await runExperiment();
   };
 
+  const totalNodes = metrics.totalNodes ?? 0;
+  const activeNodes = metrics.activeNodes ?? 0;
+  const activePct = totalNodes ? Math.round((activeNodes / totalNodes) * 100) : 0;
+  const totalDataPoints = metrics.totalDataPoints ?? 0;
+  const modelAccuracy = metrics.modelAccuracy ?? 0;
+  const privacyScore = metrics.privacyScore ?? 0;
+
   // ========== UI ==========
   if (!isAuthenticated) {
     return (
@@ -474,6 +484,9 @@ const App = () => {
               <option>Phishing-URLs</option>
               <option>Windows-EventLog</option>
               <option>NSL-KDD sample</option>
+              <option>Firewall-Alerts</option>
+              <option>AWS-CloudTrail</option>
+              <option>Darkweb-Credentials</option>
             </select>
             {useUploadedCsv && (
               <p className="text-xs text-purple-300 mt-1">
@@ -822,13 +835,39 @@ const App = () => {
         {/* KPI / Nodes / Health */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-5">
-            <h3 className="font-semibold mb-2">KPIs</h3>
-            <div className="text-sm space-y-1">
-              <div>Total nodes: {metrics.totalNodes ?? 0}</div>
-              <div>Active nodes: {metrics.activeNodes ?? 0}</div>
-              <div>Total data points: {metrics.totalDataPoints ?? 0}</div>
-              <div>Model accuracy: {metrics.modelAccuracy?.toFixed?.(2) ?? metrics.modelAccuracy}%</div>
-              <div>Privacy score: {metrics.privacyScore}%</div>
+            <h3 className="font-semibold mb-4 flex items-center gap-2">
+              KPIs
+              <span className="text-xs text-slate-400">Live federation metrics</span>
+            </h3>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="bg-slate-900/60 rounded-lg p-3">
+                <div className="text-xs uppercase tracking-wide text-slate-400">Nodes</div>
+                <div className="text-2xl font-semibold">{totalNodes}</div>
+                <div className="mt-2 text-slate-400 text-xs">Active {activeNodes}</div>
+                <div className="mt-1 h-1.5 bg-slate-800 rounded-full">
+                  <div
+                    className="h-1.5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400"
+                    style={{ width: `${Math.min(100, activePct)}%` }}
+                  />
+                </div>
+              </div>
+              <div className="bg-slate-900/60 rounded-lg p-3">
+                <div className="text-xs uppercase tracking-wide text-slate-400">Data points</div>
+                <div className="text-2xl font-semibold">{totalDataPoints.toLocaleString()}</div>
+                <div className="mt-2 text-slate-400 text-xs">Across federation</div>
+              </div>
+              <div className="bg-slate-900/60 rounded-lg p-3">
+                <div className="text-xs uppercase tracking-wide text-slate-400">Model accuracy</div>
+                <div className="text-2xl font-semibold">{modelAccuracy.toFixed(2)}%</div>
+                <div className="mt-2 text-emerald-300 text-xs">Post-dedupe estimate</div>
+              </div>
+              <div className="bg-slate-900/60 rounded-lg p-3">
+                <div className="text-xs uppercase tracking-wide text-slate-400">Privacy score</div>
+                <div className="text-2xl font-semibold">{privacyScore}%</div>
+                <span className="inline-flex mt-2 text-xs px-2 py-1 rounded-full bg-purple-600/20 text-purple-200">
+                  GDPR ready
+                </span>
+              </div>
             </div>
           </div>
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-5">

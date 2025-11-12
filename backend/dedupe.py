@@ -150,10 +150,88 @@ def load_nsl_kdd_sample(n=10000, dup_pct=0.05, fuzzy_pct=0.02):
     df.to_csv(out, index=False)
     return df
 
+def load_firewall_alerts(n=12000, dup_pct=0.08, fuzzy_pct=0.03):
+    """Synthetic firewall IDS alerts with duplicates."""
+    severities = ["low", "medium", "high", "critical"]
+    signatures = ["SQLi attempt", "Port scan", "Ransomware beacon", "C2 traffic", "Exploit kit"]
+    rows = []
+    for i in range(n):
+        src_ip = fake.ipv4_public()
+        dst_ip = fake.ipv4_private()
+        sig = random.choice(signatures)
+        rows.append({
+            "id": i + 1,
+            "data_subject_id": f"{src_ip}->{dst_ip}",
+            "src_ip": src_ip,
+            "dst_ip": dst_ip,
+            "severity": random.choice(severities),
+            "signature": sig,
+            "text": f"{sig} from {src_ip} targeting {dst_ip}",
+        })
+    df = pd.DataFrame(rows)
+    df = _inject_duplicates(df, text_col="text", dup_pct=dup_pct, fuzzy_pct=fuzzy_pct)
+    out = DATA_DIR / "firewall_alerts.csv"
+    df.to_csv(out, index=False)
+    return df
+
+def load_cloudtrail_events(n=14000, dup_pct=0.07, fuzzy_pct=0.025):
+    """AWS CloudTrail-style management events with duplicates."""
+    actions = [
+        "CreateUser", "DeleteAccessKey", "AttachRolePolicy", "StopInstances",
+        "CreateBucket", "PutBucketPolicy", "CreateStack", "UpdateFunctionConfiguration",
+    ]
+    regions = ["us-east-1", "us-west-2", "ap-southeast-2", "eu-central-1"]
+    rows = []
+    for i in range(n):
+        account = fake.lexify(text="????-prod")
+        action = random.choice(actions)
+        aws_user = f"arn:aws:iam::{random.randint(100000000000, 999999999999)}:user/{fake.user_name()}"
+        region = random.choice(regions)
+        rows.append({
+            "id": i + 1,
+            "data_subject_id": aws_user,
+            "event_time": fake.iso8601(),
+            "aws_region": region,
+            "event_name": action,
+            "source_ip": fake.ipv4_public(),
+            "text": f"{action} by {aws_user} in {region} account {account}",
+        })
+    df = pd.DataFrame(rows)
+    df = _inject_duplicates(df, text_col="text", dup_pct=dup_pct, fuzzy_pct=fuzzy_pct)
+    out = DATA_DIR / "cloudtrail_events.csv"
+    df.to_csv(out, index=False)
+    return df
+
+def load_darkweb_credentials(n=6000, dup_pct=0.12, fuzzy_pct=0.04):
+    """Compromised credential listings scraped from 'dark web' dumps."""
+    industries = ["finance", "healthcare", "gaming", "gov", "retail"]
+    rows = []
+    for i in range(n):
+        email = fake.ascii_free_email()
+        company = fake.company()
+        domain = fake.domain_name()
+        rows.append({
+            "id": i + 1,
+            "data_subject_id": email,
+            "email": email,
+            "password_hash": fake.sha256(),
+            "breach_source": company,
+            "industry": random.choice(industries),
+            "text": f"{email} | {domain} | leaked from {company}",
+        })
+    df = pd.DataFrame(rows)
+    df = _inject_duplicates(df, text_col="text", dup_pct=dup_pct, fuzzy_pct=fuzzy_pct)
+    out = DATA_DIR / "darkweb_credentials.csv"
+    df.to_csv(out, index=False)
+    return df
+
 SECURITY_DATASETS = {
     "Phishing-URLs": load_phishing_urls,
     "Windows-EventLog": load_windows_eventlog,
     "NSL-KDD sample": load_nsl_kdd_sample,
+    "Firewall-Alerts": load_firewall_alerts,
+    "AWS-CloudTrail": load_cloudtrail_events,
+    "Darkweb-Credentials": load_darkweb_credentials,
 }
 
 def load_dataset_by_name(name: str) -> pd.DataFrame:
