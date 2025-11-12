@@ -1,7 +1,65 @@
 import { useState, useEffect, useRef } from "react";
-import { Lock, User, Eye, EyeOff, Database, Settings, Scale, ShieldCheck } from "lucide-react";
+import { Lock, User, Eye, EyeOff, Database, Settings, Scale, ShieldCheck, Info, FileText } from "lucide-react";
 
 export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+
+const DATASET_CLASSES = {
+  MNIST: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+  "CIFAR-10": ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"],
+  "CIFAR-100": [],
+  "NSL-KDD sample": ["benign", "attack"],
+  "NSL-KDD": ["benign", "DoS", "Probe", "R2L", "U2R"],
+  "Phishing-URLs": ["legit", "phishing"],
+  "Windows-EventLog": ["auth", "process", "network", "registry", "file"],
+};
+
+const PRESETS = [
+  { label: "Light", duplicateRatio: 5, clientsAffected: 25, strategy: "random" },
+  { label: "Clustered", duplicateRatio: 10, clientsAffected: 30, strategy: "by_client" },
+  { label: "Targeted", duplicateRatio: 8, clientsAffected: 15, strategy: "by_class" },
+  { label: "Flood", duplicateRatio: 20, clientsAffected: 80, strategy: "burst" },
+];
+
+const Hint = ({ text }) => (
+  <span className="ml-1 text-slate-400" title={text}>
+    <Info size={14} className="inline align-[-2px]" />
+  </span>
+);
+
+const SliderNumber = ({ value, min, max, step = 1, onChange }) => (
+  <div className="flex items-center gap-3">
+    <input
+      type="range"
+      min={min}
+      max={max}
+      step={step}
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      className="w-full accent-purple-500"
+    />
+    <input
+      type="number"
+      min={min}
+      max={max}
+      step={step}
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      className="w-20 bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-right"
+    />
+    <span className="text-slate-400 text-sm">%</span>
+  </div>
+);
+
+function estimateImpact(totalPoints, duplicatePct, clientsPct, totalNodes = 8) {
+  totalPoints = Number(totalPoints) || 0;
+  const dup = Math.round(totalPoints * (duplicatePct / 100));
+  const clients = Math.max(1, Math.round((totalNodes || 1) * (clientsPct / 100)));
+  return {
+    injected: dup,
+    clients,
+    totalAfterInjection: totalPoints + dup,
+  };
+}
 
 const App = () => {
   // --- Auth & basic UI ---
@@ -49,6 +107,9 @@ const App = () => {
   const [resultSummary, setResultSummary] = useState(null);
   const [resultPairs, setResultPairs] = useState([]);
   const [downloadUrl, setDownloadUrl] = useState("");
+  const [uploadedCsvName, setUploadedCsvName] = useState("");
+  const [uploadedCsvFile, setUploadedCsvFile] = useState(null);
+  const [useUploadedCsv, setUseUploadedCsv] = useState(false);
 
   // --- History (for demo/report) ---
   const [history, setHistory] = useState(() => {
@@ -59,6 +120,7 @@ const App = () => {
   // --- Streaming helpers ---
   const sseRef = useRef(null);
   const pollRef = useRef(null);
+  const uploadInputRef = useRef(null);
 
   // ========== Helpers ==========
   function cancelStreams() {
@@ -128,6 +190,7 @@ const App = () => {
 
   async function handleDatasetChange(value) {
     setDataset(value);
+    if (useUploadedCsv) setUseUploadedCsv(false);
     try {
       await fetch(`${API_URL}/api/datasets/select`, {
         method: "POST",
@@ -139,6 +202,7 @@ const App = () => {
   }
 
   async function uploadCsv(file) {
+    if (!file) return;
     try {
       const fd = new FormData();
       fd.append("file", file);
@@ -146,10 +210,35 @@ const App = () => {
       if (!r.ok) throw new Error(`upload ${r.status}`);
       await Promise.all([reloadKPIs(), reloadNodes(), reloadHealth()]);
       setError("");
+      setUploadedCsvName(file.name);
+      setUploadedCsvFile(file);
+      setUseUploadedCsv(true);
     } catch (e) {
       console.warn(e);
       setError("Upload failed. CSV must include a data_subject_id column.");
     }
+  }
+
+  async function handleUploadedToggle(next) {
+    if (!uploadedCsvFile) return;
+    if (!next) {
+      setUseUploadedCsv(false);
+      await handleDatasetChange(dataset);
+      return;
+    }
+    if (!useUploadedCsv && next) {
+      await uploadCsv(uploadedCsvFile);
+    }
+  }
+
+  async function clearUploadedCsv() {
+    if (useUploadedCsv) {
+      setUseUploadedCsv(false);
+      await handleDatasetChange(dataset);
+    }
+    setUploadedCsvFile(null);
+    setUploadedCsvName("");
+    if (uploadInputRef.current) uploadInputRef.current.value = "";
   }
 
   async function runExperiment() {
@@ -373,8 +462,11 @@ const App = () => {
             <label className="block text-sm text-slate-300 mb-2">Select dataset</label>
             <select
               value={dataset}
+              disabled={useUploadedCsv}
               onChange={(e) => handleDatasetChange(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm"
+              className={`w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm ${
+                useUploadedCsv ? "opacity-60 cursor-not-allowed" : ""
+              }`}
             >
               <option>MNIST</option>
               <option>CIFAR-10</option>
@@ -383,14 +475,45 @@ const App = () => {
               <option>Windows-EventLog</option>
               <option>NSL-KDD sample</option>
             </select>
+            {useUploadedCsv && (
+              <p className="text-xs text-purple-300 mt-1">
+                Using uploaded CSV. Uncheck below to switch datasets.
+              </p>
+            )}
             <div className="mt-4">
               <label className="block text-sm text-slate-300 mb-2">Or upload CSV</label>
               <input
                 type="file"
                 accept=".csv"
+                ref={uploadInputRef}
                 onChange={(e) => e.target.files?.[0] && uploadCsv(e.target.files[0])}
                 className="w-full text-sm file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-purple-600 file:text-white hover:file:bg-purple-700"
               />
+              <div className="mt-3 flex items-center gap-2 text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-600 bg-slate-900"
+                  checked={useUploadedCsv}
+                  disabled={!uploadedCsvFile}
+                  onChange={(e) => handleUploadedToggle(e.target.checked)}
+                />
+                <span>Use uploaded CSV (overrides dropdown)</span>
+              </div>
+              {uploadedCsvName && (
+                <div className="mt-3 flex items-center gap-3 text-sm">
+                  <span className="flex items-center gap-2 text-slate-200">
+                    <FileText size={18} className="text-slate-400" />
+                    {uploadedCsvName}
+                  </span>
+                  <button
+                    type="button"
+                    className="text-xs text-red-300 hover:text-red-200 underline"
+                    onClick={clearUploadedCsv}
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
               <p className="text-xs text-slate-400 mt-1">
                 CSV must include <code>data_subject_id</code>.
               </p>
@@ -403,9 +526,26 @@ const App = () => {
               <Settings className="text-amber-400" />
               <h3 className="font-semibold">Attack Parameters</h3>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+
+            <div className="flex flex-wrap gap-2 mb-4">
+              {PRESETS.map((p) => (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => setAttack({ ...attack, ...p })}
+                  className="px-3 py-1 rounded-lg border border-slate-600 text-sm hover:bg-slate-700"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="col-span-2">
-                <label className="block text-sm text-slate-300 mb-2">Attack type</label>
+                <label className="block text-sm text-slate-300 mb-2">
+                  Attack type
+                  <Hint text="Simulate duplication attacks by injecting repeated rows across clients/classes." />
+                </label>
                 <select
                   value={attack.type}
                   onChange={(e) => setAttack({ ...attack, type: e.target.value })}
@@ -415,54 +555,91 @@ const App = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Duplicate ratio (%)</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="90"
-                  step="1"
-                  value={attack.duplicateRatio}
-                  onChange={(e) =>
-                    setAttack({ ...attack, duplicateRatio: Number(e.target.value) })
-                  }
+                <label className="block text-sm text-slate-300 mb-2">
+                  Strategy
+                  <Hint text="Random spreads evenly, by-client clusters nodes, by-class targets a label, burst floods many clients." />
+                </label>
+                <select
+                  value={attack.strategy}
+                  onChange={(e) => setAttack({ ...attack, strategy: e.target.value })}
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm"
+                >
+                  <option value="random">Random</option>
+                  <option value="by_client">By client</option>
+                  <option value="by_class">By class</option>
+                  <option value="burst">Burst</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-slate-300 mb-2">
+                  Clients affected (%) <Hint text="Percent of nodes compromised." />
+                </label>
+                <SliderNumber
+                  value={attack.clientsAffected}
+                  min={1}
+                  max={100}
+                  onChange={(v) => setAttack({ ...attack, clientsAffected: v })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm text-slate-300 mb-2">
+                  Duplicate ratio (%) <Hint text="How much of the dataset gets duplicated before deduping." />
+                </label>
+                <SliderNumber
+                  value={attack.duplicateRatio}
+                  min={0}
+                  max={90}
+                  onChange={(v) => setAttack({ ...attack, duplicateRatio: v })}
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Clients affected (%)</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  step="1"
-                  value={attack.clientsAffected}
-                  onChange={(e) =>
-                    setAttack({ ...attack, clientsAffected: Number(e.target.value) })
-                  }
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-sm text-slate-300 mb-2">Target class</label>
-                <select
-                  value={attack.targetClass}
-                  onChange={(e) => setAttack({ ...attack, targetClass: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm"
-                >
-                  <option value="auto">Auto</option>
-                  <option value="0">0</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                </select>
+                <label className="block text-sm text-slate-300 mb-2">
+                  Target class
+                  <Hint
+                    text={
+                      attack.strategy === "by_class"
+                        ? "Choose which label to duplicate heavily."
+                        : "Only active when Strategy = By class."
+                    }
+                  />
+                </label>
+                {(() => {
+                  const names = DATASET_CLASSES[dataset] || [];
+                  const disabled = attack.strategy !== "by_class";
+                  const options =
+                    names.length > 0
+                      ? names
+                      : Array.from({ length: 10 }, (_, i) => String(i));
+                  return (
+                    <select
+                      disabled={disabled}
+                      value={attack.targetClass}
+                      onChange={(e) => setAttack({ ...attack, targetClass: e.target.value })}
+                      className={`w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm ${
+                        disabled ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      <option value="auto">Auto</option>
+                      {options.map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                  );
+                })()}
               </div>
             </div>
+
+            <AttackEstimate
+              total={metrics.totalDataPoints}
+              nodes={metrics.totalNodes}
+              duplicateRatio={attack.duplicateRatio}
+              clientsAffected={attack.clientsAffected}
+            />
           </div>
 
           {/* GDPR */}
@@ -471,16 +648,30 @@ const App = () => {
               <Scale className="text-emerald-400" />
               <h3 className="font-semibold">GDPR Parameters</h3>
             </div>
-            <label className="block text-sm text-slate-300 mb-2">Data subject ID (optional)</label>
+            <label className="block text-sm text-slate-300 mb-2">
+              Data subject ID (optional)
+              <Hint text="Use a subject identifier to simulate DSAR processing. Required for hard delete." />
+            </label>
             <input
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm mb-3"
+              className={`w-full bg-slate-900 border rounded-lg p-2 text-sm mb-2 ${
+                gdpr.unlearningMode === "hard_delete" && !gdpr.subjectId ? "border-red-600" : "border-slate-700"
+              }`}
               placeholder="e.g., subj-000123"
               value={gdpr.subjectId}
               onChange={(e) => setGdpr({ ...gdpr, subjectId: e.target.value })}
+              pattern="^([A-Za-z0-9_-]{3,64}|subj-\\d{3,})$"
+              title="3–64 chars, letters/digits/_-/ or subj-######"
             />
+            {gdpr.unlearningMode === "hard_delete" && !gdpr.subjectId && (
+              <div className="text-xs text-red-400 mb-2">Subject ID is required for hard delete.</div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Unlearning mode</label>
+                <label className="block text-sm text-slate-300 mb-2">
+                  Unlearning mode
+                  <Hint text="Certified removes influence with proofs; Hard delete purges rows immediately." />
+                </label>
                 <select
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm"
                   value={gdpr.unlearningMode}
@@ -491,17 +682,72 @@ const App = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Retention (days)</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="365"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm"
-                  value={gdpr.retentionDays}
-                  onChange={(e) =>
-                    setGdpr({ ...gdpr, retentionDays: Number(e.target.value) })
-                  }
-                />
+                <label className="block text-sm text-slate-300 mb-2">
+                  Retention (days)
+                  <Hint text="How long checkpoints/logs remain before purging. Set 0 to purge immediately." />
+                </label>
+                <div className="space-y-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max="365"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm"
+                    value={gdpr.retentionDays}
+                    onChange={(e) => setGdpr({ ...gdpr, retentionDays: Number(e.target.value) })}
+                  />
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {[0, 7, 30, 90, 365].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setGdpr({ ...gdpr, retentionDays: d })}
+                        className={`px-2 py-1 rounded border ${
+                          gdpr.retentionDays === d ? "border-emerald-400 text-emerald-300" : "border-slate-600"
+                        } hover:bg-slate-700`}
+                      >
+                        {d === 0 ? "0 (purge now)" : d}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="col-span-2 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-slate-300 mb-2">
+                    Differential privacy
+                    <Hint text="Adds noise to metrics to prevent re-identification." />
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="dpEnabled"
+                      type="checkbox"
+                      checked={gdpr.dpEnabled}
+                      onChange={(e) => setGdpr({ ...gdpr, dpEnabled: e.target.checked })}
+                      className="h-4 w-4"
+                    />
+                    <label htmlFor="dpEnabled" className="text-sm text-slate-300">
+                      Enable DP
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className={`block text-sm mb-2 ${gdpr.dpEnabled ? "text-slate-300" : "text-slate-500"}`}>
+                    ε (epsilon)
+                  </label>
+                  <div className={gdpr.dpEnabled ? "" : "opacity-50"}>
+                    <input
+                      type="range"
+                      min="1"
+                      max="20"
+                      step="1"
+                      value={gdpr.epsilon}
+                      disabled={!gdpr.dpEnabled}
+                      onChange={(e) => setGdpr({ ...gdpr, epsilon: Number(e.target.value) })}
+                      className="w-full accent-emerald-500"
+                    />
+                    <div className="text-right text-xs text-slate-400 mt-1">ε = {gdpr.epsilon}</div>
+                  </div>
+                </div>
               </div>
               <div className="col-span-2 flex items-center gap-2">
                 <input
@@ -513,6 +759,41 @@ const App = () => {
                 <label htmlFor="auditLog" className="text-sm text-slate-300">
                   Keep audit log
                 </label>
+                {gdpr.auditLog && <span className="text-xs text-slate-400">IDs are hashed in logs.</span>}
+              </div>
+            </div>
+
+            <div className="mt-3 text-xs text-slate-400 space-y-1">
+              <div>
+                {gdpr.unlearningMode === "hard_delete" ? (
+                  <>
+                    Hard delete{" "}
+                    {gdpr.subjectId ? (
+                      <>
+                        for <span className="text-slate-200">{gdpr.subjectId}</span>
+                      </>
+                    ) : (
+                      <>requires a subject ID</>
+                    )}
+                    .
+                  </>
+                ) : (
+                  <>
+                    Certified unlearning
+                    {gdpr.subjectId && (
+                      <>
+                        {" "}
+                        for <span className="text-slate-200">{gdpr.subjectId}</span>
+                      </>
+                    )}
+                    .
+                  </>
+                )}
+              </div>
+              <div>
+                Retention: <span className="text-slate-200">{gdpr.retentionDays} days</span>. DP:{" "}
+                <span className="text-slate-200">{gdpr.dpEnabled ? `on (ε=${gdpr.epsilon})` : "off"}</span>. Audit log:{" "}
+                <span className="text-slate-200">{gdpr.auditLog ? "enabled (hashed IDs)" : "disabled"}</span>.
               </div>
             </div>
           </div>
@@ -648,6 +929,18 @@ const App = () => {
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+const AttackEstimate = ({ total, nodes, duplicateRatio, clientsAffected }) => {
+  const est = estimateImpact(total, duplicateRatio, clientsAffected, nodes);
+  return (
+    <div className="mt-3 text-xs text-slate-400">
+      Estimated impact (pre-dedup): inject ≈{" "}
+      <span className="text-slate-200">{est.injected.toLocaleString()}</span> duplicate rows across ≈{" "}
+      <span className="text-slate-200">{est.clients}</span> clients → temporary size ≈{" "}
+      <span className="text-slate-200">{est.totalAfterInjection.toLocaleString()}</span>.
     </div>
   );
 };
