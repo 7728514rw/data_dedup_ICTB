@@ -2,7 +2,7 @@
 
 An interactive dashboard for experimenting with duplication attacks and GDPR-compliant unlearning. The frontend is built with **React + Vite + Tailwind**, while the backend (FastAPI) synthesises datasets, injects duplicates, and exposes progress/KPI endpoints.
 
-## TL;DR Quickstart (classic view)
+## TL;DR Quickstart (classic view) 
 If you prefer the original lightweight summary, here it is for reference:
 
 **New features added (per feedback):**
