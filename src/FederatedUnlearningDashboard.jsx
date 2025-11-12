@@ -1,6 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { Lock, User, Eye, EyeOff, Activity, Database, Trash2, CheckCircle, AlertTriangle, TrendingUp, Server, Settings, ShieldCheck, Scale } from "lucide-react";
 
+// src/api.ts
+export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+
+// Example with fetch
+export async function getKpis() {
+  const res = await fetch(`${API_URL}/api/kpis`);
+  return res.json();
+}
+
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState("");
@@ -410,7 +419,7 @@ const App = () => {
       table thead th {
         background-color: rgba(15, 23, 42, 0.95);
         border: 1px solid rgba(167, 139, 250, 0.3);
-        padding: 1rem;
+        padding: 1rem;  
         text-align: left;
         font-weight: 600;
         color: var(--accent-gold);
