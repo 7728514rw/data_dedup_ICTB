@@ -5,6 +5,7 @@ import uuid
 import time
 from datetime import datetime
 from typing import Dict, Any, Optional, List
+import asyncio
 
 import pandas as pd
 from fastapi import FastAPI, UploadFile, File, Body, BackgroundTasks
@@ -210,7 +211,7 @@ async def start_run(cfg: Dict[str, Any] = Body(default={}), bg: BackgroundTasks 
     bg.add_task(_run_worker, job_id, cfg)
     headers = {"x-job-id": job_id}
     # FastAPI will schedule the task once the response is sent
-    return JSONResponse({"job_id": job_id}, headers=headers)
+    return JSONResponse({"job_id": job_id}, headers=headers, background=bg)
 
 # ---------- Progress (SSE) & Results ----------
 @app.get("/api/progress")
@@ -230,15 +231,44 @@ async def progress(job_id: str):
                 break
             # keep SSE alive
             await asyncio.sleep(0.25)
-    return StreamingResponse(gen(), media_type="text/event-stream")
+    return StreamingResponse(
+        gen(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 @app.get("/api/results")
 async def results(job_id: str):
     data = JOBS.get(job_id)
     if not data or "summary" not in data:
         return JSONResponse({"detail": "not ready"}, status_code=404)
+
+    summary = data["summary"] or {}
+    before_n = int(summary.get("before_records", 0) or 0)
+    after_n = int(summary.get("after_records", 0) or 0)
+    removed = int(summary.get("removed", max(before_n - after_n, 0)))
+    # compute reduction if not present
+    reduction_pct = float(summary.get("reduction_pct", (removed / before_n * 100.0) if before_n else 0.0))
+    # duplicate rate before/after (0..1)
+    dup_rate_before = (removed / before_n) if before_n else 0.0
+    dup_rate_after = 0.0  # target after dedupe
+
     payload: Dict[str, Any] = {
-        "summary": data["summary"],
+        "job_id": job_id,
+        "dataset_name": STATE.get("dataset_name", "unknown"),
+        "rows": after_n,
+        "duplicates_removed": removed,
+        "duplicate_rate_before": dup_rate_before,
+        "duplicate_rate_after": dup_rate_after,
+        "metrics": {
+            "before_accuracy": None,
+            "after_accuracy": None,
+            "privacy_score": None,
+        },
+        "summary": summary,
         "sample_pairs": data.get("pairs", []),
     }
     if data.get("csv_path"):

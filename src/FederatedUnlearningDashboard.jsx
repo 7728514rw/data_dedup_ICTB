@@ -984,6 +984,33 @@ const AttackEstimate = ({ total, nodes, duplicateRatio, clientsAffected }) => {
   );
 };
 
+const ResultBreakdown = ({ before, after, removed }) => {
+  const total = Math.max(1, Number(before) || 1);
+  const removedPct = Math.min(100, Math.max(0, (Number(removed) || 0) / total * 100));
+  const remainingPct = 100 - removedPct;
+  return (
+    <div className="mb-6">
+      <div className="text-xs uppercase tracking-wide text-slate-400 mb-1">Visual breakdown</div>
+      <div className="h-3 bg-slate-800 rounded-full overflow-hidden flex">
+        <div
+          className="bg-gradient-to-r from-red-500 to-orange-400"
+          style={{ width: `${removedPct}%` }}
+          title={`Removed ${removedPct.toFixed(1)}%`}
+        />
+        <div
+          className="bg-emerald-500/60 flex-1"
+          style={{ width: `${remainingPct}%` }}
+          title={`Remaining ${remainingPct.toFixed(1)}%`}
+        />
+      </div>
+      <div className="mt-1 flex justify-between text-xs text-slate-400">
+        <span>{removed?.toLocaleString?.() || removed} removed</span>
+        <span>{after?.toLocaleString?.() || after} remaining</span>
+      </div>
+    </div>
+  );
+};
+
 // --- Results Drawer ---
 const ResultsPanel = ({ open, onClose, summary, pairs, downloadUrl, progress, jobId, dataset }) => {
   if (!open) return null;
@@ -1016,12 +1043,17 @@ const ResultsPanel = ({ open, onClose, summary, pairs, downloadUrl, progress, jo
 
         {summary && (
           <>
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-4 gap-4 mb-4">
               <Stat label="Before" value={summary.before_records} />
               <Stat label="After" value={summary.after_records} />
               <Stat label="Removed" value={`${summary.removed} (${summary.reduction_pct}%)`} />
               <Stat label="Method" value={`exact:${summary.removed_exact} • fuzzy:${summary.removed_fuzzy}`} />
             </div>
+            <ResultBreakdown
+              before={summary.before_records}
+              after={summary.after_records}
+              removed={summary.removed}
+            />
 
             {downloadUrl && (
               <div className="mb-4">
