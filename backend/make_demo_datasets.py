@@ -1,48 +1,37 @@
-# backend/scripts/make_demo_datasets.py
-from pathlib import Path
-from datetime import datetime, timedelta
-import numpy as np, pandas as pd, random, string
+# backend/make_demo_datasets.py
+import os
+import numpy as np
+import pandas as pd
 
-rng = np.random.default_rng(123)
+REGIONS = ["VIC", "NSW", "QLD", "NT", "WA"]
 
-def make_dataset(name, n_base=15000, pct_exact=0.08, pct_near=0.08, labels=10):
-    states = ["VIC","NSW","QLD","NT","SA","WA","ACT","TAS"]
-    def typo(s):
-        if len(s) < 3: return s
-        i = random.randrange(len(s)); s = list(s)
-        s[i] = random.choice(string.ascii_lowercase)
-        return "".join(s)
+def gen_dataset(path: str, n_rows=6000, n_classes=10):
+    rng = np.random.default_rng(42)
+    X = rng.normal(size=(n_rows, 12))          # x0..x11
+    y = rng.integers(0, n_classes, size=n_rows)
+    regions = rng.choice(REGIONS, size=n_rows)
+    ids = [f"subj-{i:06d}" for i in range(n_rows)]
 
-    rows = []
-    start = datetime(2024,1,1)
-    for i in range(n_base):
-        label = int(rng.integers(0, labels))
-        rows.append({
-            "data_subject_id": f"{name[:3].upper()}{i:06d}",
-            "dataset": name,
-            "label": label,
-            "node": random.choice(states),
-            "record_text": f"{name} sample record {label}",
-            "created_at": (start + timedelta(days=int(rng.integers(0,365)))).date().isoformat(),
-            "value": float(np.round(rng.normal(0.0, 1.0), 4)),
-            "owner_email": f"user{int(rng.integers(1,40000))}@example.com",
-        })
+    df = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+    df["label"] = y
+    df["data_subject_id"] = ids
+    df["region"] = regions
 
-    df = pd.DataFrame(rows)
-    exact = df.sample(int(pct_exact*len(df)), replace=True, random_state=1)
-    near  = df.sample(int(pct_near *len(df)), replace=True, random_state=2).copy()
-    for col in ["record_text","owner_email"]:
-        mask = rng.random(len(near)) < 0.6
-        near.loc[mask, col] = near.loc[mask, col].apply(typo)
+    # Add baseline duplicates (~5%)
+    dup_idx = rng.choice(n_rows, size=int(n_rows * 0.05), replace=False)
+    df = pd.concat([df, df.iloc[dup_idx]], ignore_index=True)
 
-    out = pd.concat([df, exact, near], ignore_index=True).sample(frac=1.0, random_state=3)
-    return out
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    df.to_csv(path, index=False)
 
-base = Path(__file__).resolve().parents[1] / "data" / "datasets"
-base.mkdir(parents=True, exist_ok=True)
+def generate_all(out_dir: str):
+    os.makedirs(out_dir, exist_ok=True)
+    gen_dataset(os.path.join(out_dir, "mnist.csv"),   n_rows=6000, n_classes=10)
+    gen_dataset(os.path.join(out_dir, "cifar10.csv"), n_rows=6000, n_classes=10)
+    gen_dataset(os.path.join(out_dir, "cifar100.csv"), n_rows=8000, n_classes=20)
 
-make_dataset("mnist",   labels=10).to_csv(base / "mnist.csv",   index=False)
-make_dataset("cifar10", labels=10).to_csv(base / "cifar10.csv", index=False)
-make_dataset("cifar100",labels=100).to_csv(base / "cifar100.csv",index=False)
-
-print("Generated:", list(p.name for p in base.glob("*.csv")))
+if __name__ == "__main__":
+    here = os.path.dirname(__file__)
+    out = os.path.join(here, "data")
+    generate_all(out)
+    print("Generated demo datasets in:", out)
